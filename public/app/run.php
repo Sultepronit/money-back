@@ -17,5 +17,3 @@ function run(): void
         $pdo = null;
     }
 }
-
-run();
