@@ -19,7 +19,7 @@ function direct(PDO $pdo): ?array
     if($request['subject'] === 'data') {
         return Data::run($pdo);
     } else if($request['method'] === 'PATCH') {
-        return update($pdo);
+        return update($pdo, $request['subject']);
     }
 
     http_response_code(404);
