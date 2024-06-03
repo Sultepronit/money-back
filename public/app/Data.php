@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/helpers/DateHandler.php';
 
-class Receive
+class Data
 {
     private static PDO $pdo;
 
@@ -20,6 +20,7 @@ class Receive
         $lastRecordIndex = count($data) - 1;
         $lastRecord = $data[$lastRecordIndex];
         $lastDate = $lastRecord['date'];
+        // echo $lastDate;
 
         $span = DateHandler::generateDateSpan($lastDate);
 
@@ -48,6 +49,6 @@ class Receive
             $data = self::get();
         }
 
-        echo json_encode($data);
+        return $data;
     }
 }
