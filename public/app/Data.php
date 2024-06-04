@@ -47,12 +47,13 @@ class Data
         }
     }
 
-    public static function run($pdo): array
+    public static function run($pdo): ?array
     {
         self::$pdo = $pdo;
 
         if(!self::checkPassword()) {
-            return ['status' => 'success']; # congrats, you did id, don't try anymore!
+            // return ['status' => 'success']; # congrats, you did id, don't try anymore!
+            return null;
         }
 
         $data = self::get();
