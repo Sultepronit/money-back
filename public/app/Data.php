@@ -7,6 +7,16 @@ class Data
 {
     private static PDO $pdo;
 
+    private static function checkPassword(): bool
+    {
+        $pass = file_get_contents('php://input');
+
+        $query = "SELECT * FROM secure";
+        $hash = self::$pdo->query($query)->fetch(PDO::FETCH_COLUMN);
+        
+        return password_verify($pass, $hash);
+    }
+
     private static function get(): array
     {
         $query = "SELECT * FROM main_table";
@@ -37,9 +47,13 @@ class Data
         }
     }
 
-    public static function run($pdo)
+    public static function run($pdo): array
     {
         self::$pdo = $pdo;
+
+        if(!self::checkPassword()) {
+            return ['status' => 'success']; # congrats, you did id, don't try anymore!
+        }
 
         $data = self::get();
         $delay = self::checkDateDelay($data);
