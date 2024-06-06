@@ -19,7 +19,9 @@ $pdo = new PDO('sqlite:' . __DIR__ . '/db.sqlite');
 // $pdo->exec($createTable);
 
 // $addColumn = "ALTER TABLE main_table ADD common_cash REAL";
-$addColumn = "ALTER TABLE main_table ADD common_usd_rate REAL";
+// $addColumn = "ALTER TABLE main_table ADD common_usd_rate REAL";
+// $addColumn = "ALTER TABLE main_table ADD stefko_credit_4 REAL";
+$addColumn = "ALTER TABLE main_table ADD stefko_debit_2 REAL";
 $pdo->exec($addColumn);
 
 // $populate = "INSERT INTO main_table
