@@ -52,8 +52,9 @@ class Data
         self::$pdo = $pdo;
 
         if(!self::checkPassword()) {
-            // return ['status' => 'success']; # congrats, you did id, don't try anymore!
-            return null;
+            return ['status' => 'success']; # congrats, you did id, don't try anymore!
+            // return null;
+            // return 
         }
 
         $data = self::get();

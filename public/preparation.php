@@ -18,6 +18,10 @@ $pdo = new PDO('sqlite:' . __DIR__ . '/db.sqlite');
 
 // $pdo->exec($createTable);
 
+// $addColumn = "ALTER TABLE main_table ADD common_cash REAL";
+$addColumn = "ALTER TABLE main_table ADD common_usd_rate REAL";
+$pdo->exec($addColumn);
+
 // $populate = "INSERT INTO main_table
 //     ('date', vira_black, vira_white) VALUES
 //     ('2024-05-29', '6785', '433');
@@ -44,8 +48,8 @@ $pdo = new PDO('sqlite:' . __DIR__ . '/db.sqlite');
 
 
 
-$query = "SELECT * FROM secure";
-$data = $pdo->query($query)->fetch(PDO::FETCH_COLUMN);
-// print_r($data);
-var_dump($data);
-var_dump(password_verify('password1', $data));
+// $query = "SELECT * FROM secure";
+// $data = $pdo->query($query)->fetch(PDO::FETCH_COLUMN);
+// // print_r($data);
+// var_dump($data);
+// var_dump(password_verify('password1', $data));
