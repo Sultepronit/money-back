@@ -21,8 +21,13 @@ $pdo = new PDO('sqlite:' . __DIR__ . '/db.sqlite');
 // $addColumn = "ALTER TABLE main_table ADD common_cash REAL";
 // $addColumn = "ALTER TABLE main_table ADD common_usd_rate REAL";
 // $addColumn = "ALTER TABLE main_table ADD stefko_credit_4 REAL";
-$addColumn = "ALTER TABLE main_table ADD stefko_debit_2 REAL";
-$pdo->exec($addColumn);
+// $addColumn = "ALTER TABLE main_table ADD stefko_debit_2 REAL";
+// $addColumn = "ALTER TABLE main_table ADD common_expense TEXT";
+// $addColumn = "ALTER TABLE main_table ADD others_marta INTEGER";
+// $pdo->exec($addColumn);
+
+$renameColumn = "ALTER TABLE main_table RENAME common_expense TO total_income";
+$pdo->exec($renameColumn);
 
 // $populate = "INSERT INTO main_table
 //     ('date', vira_black, vira_white) VALUES
