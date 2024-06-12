@@ -6,7 +6,7 @@ require_once __DIR__ . '/direct.php';
 function run(): void
 {
     try {
-        $pdo = new PDO('sqlite:' . __DIR__ . '/../db.sqlite');
+        $pdo = new PDO('sqlite:' . __DIR__ . '/../db/db.sqlite');
 
         $response = direct($pdo);
 

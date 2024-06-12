@@ -22,9 +22,6 @@ function direct(PDO $pdo): ?array
         return update($pdo, $request['subject']);
     }
 
-    // http_response_code(404);
-    // echo '<h2>You shall not pass!</h2><h1>🧙🏻‍♂️</h1>';
-    // return null;
     // return ['status' => 'success']; # congrats, you did id, don't try anymore!
     return null;
 }
