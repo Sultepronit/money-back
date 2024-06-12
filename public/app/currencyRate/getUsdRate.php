@@ -26,7 +26,6 @@ function getUsdRate() {
     $theRate = explode($redundantText, $wholeText)[0];
     $theRate = (float) str_replace(',', '.', $theRate);
 
-    print_r(['rate' => round($theRate, 1)]);
-
+    // print_r(['rate' => round($theRate, 1)]);
     return ['rate' => round($theRate, 1)];
 }
