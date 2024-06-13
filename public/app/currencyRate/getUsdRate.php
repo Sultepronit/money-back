@@ -19,7 +19,7 @@ function getUsdRate() {
     $wholeText = $firstDiv->textContent;
     $redundantText = $firstP->textContent;
 
-    $theRate = explode($redundantText, $wholeText)[0];
+    $theRate = str_replace($redundantText, '', $wholeText);
     $theRate = (float) str_replace(',', '.', $theRate);
 
     return ['rate' => round($theRate, 1)];
