@@ -1,8 +1,24 @@
 <?php
 declare(strict_types=1);
 
+function updateVersion(PDO $pdo): int
+{
+    $query = "SELECT * FROM last_version";
+    $lastVersion = $pdo->query($query)-> fetch(PDO::FETCH_COLUMN);
+
+    $updated = $lastVersion + 1;
+
+    $query = "UPDATE last_version SET value = {$updated}
+        WHERE value = {$lastVersion}";
+    $pdo->exec($query);
+
+    return $updated;
+}
+
 function update(PDO $pdo, $date): array
 {
+    $version = updateVersion($pdo);
+
     # get the data
     $input = json_decode(file_get_contents('php://input'));
     // print_r($input);
@@ -19,5 +35,6 @@ function update(PDO $pdo, $date): array
 
     # check results
     return (string) $result[$column] === (string) $value
-        ? ['success' => true] : compact('input', 'result');
+        // ? ['success' => true] : compact('input', 'result');
+        ? ['version' => $version] : compact('input', 'result');
 }

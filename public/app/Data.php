@@ -7,10 +7,30 @@ class Data
 {
     private static PDO $pdo;
 
-    private static function checkPassword(): bool
+    private static function checkRefreshData($passdata): string
     {
-        $pass = file_get_contents('php://input');
+        $passdata = json_decode($passdata, true);
 
+        $fields = ['date', 'column', 'value', 'version'];
+        foreach($fields as $field) {
+            if(!isset($passdata[$field])) return '';
+        }
+        
+        $query = "SELECT {$passdata['column']} FROM main_table
+            WHERE date = '{$passdata['date']}'";
+ 
+        $value = self::$pdo->query($query)->fetch(PDO::FETCH_COLUMN);
+
+        if($value != $passdata['value']) return '';
+
+        $query = "SELECT * FROM last_version";
+        $lastVersion = self::$pdo->query($query)-> fetch(PDO::FETCH_COLUMN);
+        
+        return $passdata['version'] == $lastVersion ? 'up-to-date' : 'update';
+    }
+
+    private static function checkPassword($pass): bool
+    {
         $query = "SELECT * FROM secure";
         $hash = self::$pdo->query($query)->fetch(PDO::FETCH_COLUMN);
         
@@ -30,7 +50,6 @@ class Data
         $lastRecordIndex = count($data) - 1;
         $lastRecord = $data[$lastRecordIndex];
         $lastDate = $lastRecord['date'];
-        // echo $lastDate;
 
         $span = DateHandler::generateDateSpan($lastDate);
 
@@ -51,20 +70,29 @@ class Data
     {
         self::$pdo = $pdo;
 
-        if(!self::checkPassword()) {
+        $pass = file_get_contents('php://input');
+
+        $doRefresh = self::checkRefreshData($pass);
+
+        if(!$doRefresh && !self::checkPassword($pass)) {
             return ['status' => 'success']; # congrats, you did id, don't try anymore!
-            // return null;
-            // return 
         }
 
-        $data = self::get();
+        $data = self::get(); // maybe it's just wrong to get all the data at each refresh!!!
         $delay = self::checkDateDelay($data);
 
         if($delay) {
             self::populateTheDb($delay);
             $data = self::get();
+        } else if($doRefresh === 'up-to-date') {
+            return ['status' => 'up-to-date'];
         }
 
-        return $data;
+        $dbVersion = getDbVersion(self::$pdo);
+
+        return [
+            'data' => $data,
+            'version' => $dbVersion
+        ];
     }
 }
