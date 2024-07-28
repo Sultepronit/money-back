@@ -18,7 +18,9 @@ function direct(PDO $pdo): ?array
     $request = parseRequest();
     
     if($request['subject'] === 'data') {
-        return Data::run($pdo);
+        return Data::receive($pdo);
+    } else if($request['subject'] === 'refresh') {
+        return Data::refresh($pdo);
     } else if($request['method'] === 'PATCH') {
         return update($pdo, $request['subject']);
     } else if($request['subject'] === 'usd-rate') {

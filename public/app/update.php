@@ -3,8 +3,7 @@ declare(strict_types=1);
 
 function updateVersion(PDO $pdo): int
 {
-    $query = "SELECT * FROM last_version";
-    $lastVersion = $pdo->query($query)-> fetch(PDO::FETCH_COLUMN);
+    $lastVersion = getDbVersion($pdo);
 
     $updated = $lastVersion + 1;
 

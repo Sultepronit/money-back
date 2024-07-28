@@ -7,28 +7,6 @@ class Data
 {
     private static PDO $pdo;
 
-    private static function checkRefreshData($passdata): string
-    {
-        $passdata = json_decode($passdata, true);
-
-        $fields = ['date', 'column', 'value', 'version'];
-        foreach($fields as $field) {
-            if(!isset($passdata[$field])) return '';
-        }
-        
-        $query = "SELECT {$passdata['column']} FROM main_table
-            WHERE date = '{$passdata['date']}'";
- 
-        $value = self::$pdo->query($query)->fetch(PDO::FETCH_COLUMN);
-
-        if($value != $passdata['value']) return '';
-
-        $query = "SELECT * FROM last_version";
-        $lastVersion = self::$pdo->query($query)-> fetch(PDO::FETCH_COLUMN);
-        
-        return $passdata['version'] == $lastVersion ? 'up-to-date' : 'update';
-    }
-
     private static function checkPassword($pass): bool
     {
         $query = "SELECT * FROM secure";
@@ -45,54 +23,74 @@ class Data
         return $data;
     }
 
-    private static function checkDateDelay(array $data): ?array
+    private static function getUpdatedDb(): ?array
     {
-        $lastRecordIndex = count($data) - 1;
-        $lastRecord = $data[$lastRecordIndex];
-        $lastDate = $lastRecord['date'];
+        # check if last date is actual
+        $query = 'SELECT date FROM main_table ORDER BY date DESC LIMIT 1';
+        $lastDate = self::$pdo->query($query)->fetch(PDO::FETCH_COLUMN);
 
-        $span = DateHandler::generateDateSpan($lastDate);
+        $dates = DateHandler::generateDateSpan($lastDate);
 
-        return empty($span) ? null : $span;
-    }
+        if(empty($dates)) return null;
 
-    private static function populateTheDb($dates): void
-    {
+        # insert passed dates to the db
         $stmt = self::$pdo->prepare("INSERT INTO main_table ('date') VALUES (:value)");
 
         foreach($dates as $date) {
             $stmt->bindParam(':value', $date);
             $stmt->execute();
         }
+
+        # return updated data
+        return self::get();
     }
 
-    public static function run($pdo): ?array
+    private static function prepareForSending($data) {
+        return [
+            'data' => $data,
+            'version' => getDbVersion(self::$pdo)
+        ];
+    }
+
+    public static function receive($pdo): array
     {
         self::$pdo = $pdo;
 
         $pass = file_get_contents('php://input');
 
-        $doRefresh = self::checkRefreshData($pass);
-
-        if(!$doRefresh && !self::checkPassword($pass)) {
+        if(!self::checkPassword($pass)) {
             return ['status' => 'success']; # congrats, you did id, don't try anymore!
         }
 
-        $data = self::get(); // maybe it's just wrong to get all the data at each refresh!!!
-        $delay = self::checkDateDelay($data);
+        $updated = self::getUpdatedDb();
+        if($updated) {
+            return self::prepareForSending($updated);
+        } else {
+            return self::prepareForSending(self::get());
+        }
+    }
 
-        if($delay) {
-            self::populateTheDb($delay);
-            $data = self::get();
-        } else if($doRefresh === 'up-to-date') {
-            return ['status' => 'up-to-date'];
+    public static function refresh($pdo): ?array
+    {
+        self::$pdo = $pdo;
+
+        $passdata = file_get_contents('php://input');
+
+        $receivedVersion = checkPassdata($passdata, self::$pdo);
+
+        if(!$receivedVersion) {
+            return ['status' => 'success']; # congrats, you did id, don't try anymore!
         }
 
-        $dbVersion = getDbVersion(self::$pdo);
-
-        return [
-            'data' => $data,
-            'version' => $dbVersion
-        ];
+        $updated = self::getUpdatedDb();
+        if($updated) { # changed the date case
+            return self::prepareForSending($updated);
+        } else { # the date is actual case
+            if($receivedVersion === getDbVersion(self::$pdo)) {
+                return ['status' => 'up-to-date'];
+            } else {
+                return self::prepareForSending(self::get());
+            }
+        }
     }
 }

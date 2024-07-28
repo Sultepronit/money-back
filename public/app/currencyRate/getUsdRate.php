@@ -22,5 +22,15 @@ function getUsdRate() {
     $theRate = str_replace($redundantText, '', $wholeText);
     $theRate = (float) str_replace(',', '.', $theRate);
 
+    // setcookie('c-name', 'wwwalue', [
+    //     'expires' => time() + 36000,
+    //     'path' => '/',
+    //     'secure' => true, // Set to true if using HTTPS
+    //     // 'httponly' => true,
+    //     'samesite' => 'None' // Required for cross-origin requests
+    // ]);
+
     return ['rate' => round($theRate, 1)];
+    // $result = ['a' => 'b', ...$_COOKIE];
+    // return $result;
 }
