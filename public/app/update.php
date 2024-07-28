@@ -34,6 +34,5 @@ function update(PDO $pdo, $date): array
 
     # check results
     return (string) $result[$column] === (string) $value
-        // ? ['success' => true] : compact('input', 'result');
         ? ['version' => $version] : compact('input', 'result');
 }
