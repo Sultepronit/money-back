@@ -17,24 +17,20 @@ function updateVersion(PDO $pdo): int
 function update(PDO $pdo, $date): array
 {
     # receive the data
-    $input = json_decode(file_get_contents('php://input'));
-    // print_r($input);
-    $column = $input[0];
-    $value = $input[1];
+    [$column, $value, $passdata] = json_decode(file_get_contents('php://input'));
+    // echo $passdata;
 
     # set data to db
-    $stmt = $pdo->prepare("UPDATE main_table SET {$column} = ? WHERE `date` = ?");
-    $stmt->execute([$value, $date]);
+    $query = "UPDATE main_table SET {$column} = ? WHERE `date` = ?";
+    $pdo->prepare($query)->execute([$value, $date]);
 
     # fetch it back
     $query = "SELECT {$column} FROM main_table WHERE `date` = '$date'";
-    $result = $pdo->query($query)->fetch(PDO::FETCH_ASSOC);
+    $result = $pdo->query($query)->fetch(PDO::FETCH_COLUMN);
 
     # send the results
-    $version = updateVersion($pdo);
-
-    return (string) $result[$column] === (string) $value
-        ? ['version' => $version] : compact('value', 'result');
+    return (string) $result === (string) $value
+        ? ['version' => updateVersion($pdo)] : compact('value', 'result');
 }
 
 function updateAddTable(PDO $pdo, $column): array
