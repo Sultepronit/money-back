@@ -1,16 +1,16 @@
 <?php
 declare(strict_types=1);
 
-function checkPassdata(string $passdata, PDO $pdo): bool|int
-{
-    $passdata = json_decode($passdata, true);
-
-    $fields = ['date', 'column', 'value'];
-    foreach($fields as $field) {
-        if(!isset($passdata[$field])) return false;
-    }
-    
+function checkPassdata(mixed $passdata, PDO $pdo): bool|int
+{    
     try {
+        $passdata = json_decode($passdata, true);
+
+        $fields = ['date', 'column', 'value'];
+        foreach($fields as $field) {
+            if(!isset($passdata[$field])) return false;
+        }
+        
         $query = "SELECT {$passdata['column']} FROM main_table
             WHERE date = '{$passdata['date']}'";
 

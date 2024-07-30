@@ -25,6 +25,8 @@ function direct(PDO $pdo): ?array
         return update($pdo, $request['subject']);
     } else if($request['subject'] === 'usd-rate') {
         return getUsdRate();
+    } else if($request['subject'] === 'wait-debit') {
+        return updateAddTable($pdo, 'wait_debit_future');
     }
 
     // return ['status' => 'success']; # congrats, you did id, don't try anymore!

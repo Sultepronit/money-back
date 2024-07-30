@@ -15,7 +15,7 @@ class Data
         return password_verify($pass, $hash);
     }
 
-    private static function get(): array
+    private static function getData(): array
     {
         $query = "SELECT * FROM main_table";
         $data = self::$pdo->query($query)->fetchAll(PDO::FETCH_ASSOC);
@@ -42,12 +42,18 @@ class Data
         }
 
         # return updated data
-        return self::get();
+        return self::getData();
+    }
+
+    private static function getWaitDebit() {
+        $query = "SELECT wait_debit_future FROM add_table";
+        return self::$pdo->query($query)-> fetch(PDO::FETCH_COLUMN);
     }
 
     private static function prepareForSending($data) {
         return [
             'data' => $data,
+            'wait_debit' => self::getWaitDebit(),
             'version' => getDbVersion(self::$pdo)
         ];
     }
@@ -66,7 +72,7 @@ class Data
         if($updated) {
             return self::prepareForSending($updated);
         } else {
-            return self::prepareForSending(self::get());
+            return self::prepareForSending(self::getData());
         }
     }
 
@@ -89,7 +95,7 @@ class Data
             if($receivedVersion === getDbVersion(self::$pdo)) {
                 return ['status' => 'up-to-date'];
             } else {
-                return self::prepareForSending(self::get());
+                return self::prepareForSending(self::getData());
             }
         }
     }
