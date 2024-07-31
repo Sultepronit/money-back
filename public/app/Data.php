@@ -9,6 +9,17 @@ class Data
 
     private static function checkPassword($pass): bool
     {
+        // echo $pass;
+        try {
+            $strong = json_decode($pass, true);
+            if(isset($strong['password'])) {
+                if(!isset($strong['username'])) return false;
+                // if(!isset($strong['passphrase'])) return false;
+                $pass = $strong['password'];
+            }
+        } catch (\Throwable $th) {
+            # do nothing
+        }
         $query = "SELECT * FROM secure";
         $hash = self::$pdo->query($query)->fetch(PDO::FETCH_COLUMN);
         

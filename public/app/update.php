@@ -7,8 +7,8 @@ function updateVersion(PDO $pdo): int
 
     $updated = $lastVersion + 1;
 
-    $query = "UPDATE last_version SET value = {$updated}
-        WHERE value = {$lastVersion}";
+    $query = "UPDATE add_table SET db_version = {$updated}
+        WHERE db_version = {$lastVersion}";
     $pdo->exec($query);
 
     return $updated;
