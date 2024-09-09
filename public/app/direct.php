@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/Data.php';
 require_once __DIR__ . '/update.php';
 require_once __DIR__ . '/currencyRate/getUsdRate.php';
+require_once __DIR__ . '/currencyRate/getEurRate.php';
 
 function parseRequest(): array
 {
@@ -25,6 +26,8 @@ function direct(PDO $pdo): ?array
         return update($pdo, $request['subject']);
     } else if($request['subject'] === 'usd-rate') {
         return getUsdRate();
+    } else if($request['subject'] === 'eur-rate') {
+        return getEurRate();
     } else if($request['subject'] === 'wait-debit') {
         return updateAddTable($pdo, 'wait_debit_future');
     }

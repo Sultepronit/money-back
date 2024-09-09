@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
-function getUsdRate() {
-    $ch = curl_init('https://minfin.com.ua/ua/currency/usd/');
+function getEurRate() {
+    $ch = curl_init('https://minfin.com.ua/ua/currency/eur/');
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     $pageContent = curl_exec($ch);
     curl_close($ch);

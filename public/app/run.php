@@ -15,7 +15,6 @@ function run(): void
         if($response) {
             header('Content-Type: application/json');
             echo json_encode($response);
-            // print_r($_COOKIE);
         }
     } catch (\Throwable $th) {
         http_response_code(500);
