@@ -20,6 +20,8 @@ function direct(PDO $pdo): ?array
     
     if($request['subject'] === 'data') {
         return Data::receive($pdo);
+    } else if($request['subject'] === 'data-new') {
+        return Data::receiveNew($pdo);
     } else if($request['subject'] === 'refresh') {
         return Data::refresh($pdo);
     } else if($request['method'] === 'PATCH') {
