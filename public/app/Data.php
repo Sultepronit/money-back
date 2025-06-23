@@ -7,11 +7,12 @@ class Data
 {
     private static PDO $pdo;
 
-    private static function checkPassword($pass): bool
+    private static function checkPassword($passData): bool // to be moved out?
     {
-        // echo $pass;
+        // echo $passData;
+        // $pass = null;
         try {
-            $strong = json_decode($pass, true);
+            $strong = json_decode($passData, true);
             if(isset($strong['password'])) {
                 if(!isset($strong['username'])) return false;
                 // if(!isset($strong['passphrase'])) return false;
@@ -22,7 +23,7 @@ class Data
         }
         $query = "SELECT * FROM secure";
         $hash = self::$pdo->query($query)->fetch(PDO::FETCH_COLUMN);
-        
+
         return password_verify($pass, $hash);
     }
 
@@ -99,17 +100,6 @@ class Data
             return ['status' => 'success']; # congrats, you did id, don't try anymore!
         }
 
-        // $updated = self::addLastDates();
-        // if($updated) { # changed the date case
-        //     return self::prepareForSending($updated);
-        // } else { # the date is actual case
-        //     if($receivedVersion === getDbVersion(self::$pdo)) {
-        //         return ['status' => 'up-to-date'];
-        //     } else {
-        //         return self::prepareForSending(self::getData());
-        //     }
-        // }
-
         if(self::addLastDates() || $receivedVersion !== getDbVersion(self::$pdo)) {
             return self::prepareForSending(self::getData());
         }
@@ -117,7 +107,7 @@ class Data
         return ['status' => 'up-to-date'];
     }
 
-    private static function getDataNew(): array
+    private static function getDataNew(int $sinceVersion = 0): array
     {
         // others_marta - to remove
         $columns = "date,
@@ -126,7 +116,7 @@ class Data
             common_usd_exchanges as commonUsdExchanges,
             common_usd_rate as dataUsdRate,
             common_eur_rate as dataEurRate,
-            income_debit as commonDebitIcome,
+            income_debit as stefkoDepositIncome,
             income_cancel as commonIncomeCancel,
             stefko_credit_1 as stefkoCredit1,
             stefko_credit_2 as stefkoCredit2,
@@ -147,7 +137,10 @@ class Data
             vira_cash_income as viraCashIncome,
             vira_cash_expense as viraCashExpense
         ";
-        $query = "SELECT $columns FROM main_table";
+
+        $condition = $sinceVersion ? "WHERE v > $sinceVersion" : '';
+
+        $query = "SELECT $columns FROM main_table $condition";
         $data = self::$pdo->query($query)->fetchAll(PDO::FETCH_ASSOC);
 
         return $data;
@@ -158,6 +151,7 @@ class Data
         self::$pdo = $pdo;
 
         $pass = file_get_contents('php://input');
+        // echo($pass);
 
         if(!self::checkPassword($pass)) {
             return ['status' => 'success']; # congrats, you did id, don't try anymore!
@@ -165,5 +159,31 @@ class Data
 
         self::addLastDates();
         return self::prepareForSending(self::getDataNew());
+    }
+
+    public static function refreshNew($pdo): ?array
+    {
+        self::$pdo = $pdo;
+
+        $json = file_get_contents('php://input');
+        $input = json_decode($json, true);
+
+        if(!checkPassdataNew($input, self::$pdo)) {
+            return ['status' => 'success']; # congrats, you did id, don't try anymore!
+        }
+
+        self::addLastDates();
+
+        if($input['version'] !== getDbVersion(self::$pdo)) {
+            // return self::prepareForSending(self::getData());
+            // return ['status' => 'to be updated!'];
+            return [
+                'patches' => self::getDataNew($input['version']),
+                // 'wait_debit' => self::getWaitDebit(),
+                'version' => getDbVersion(self::$pdo)
+            ];
+        }
+
+        return ['status' => 'up-to-date'];
     }
 }
