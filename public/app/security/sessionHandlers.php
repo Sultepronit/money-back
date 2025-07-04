@@ -35,20 +35,22 @@ function getActualSession(PDO $pdo): string {
     return pushNewSession($today, $pdo);
 }
 
+
+/**
+ * @return '' (for up-to-date) | '[actual session]' | 'none'
+ */
 function checkSession(mixed $session, PDO $pdo): string {
-    if (!is_string($session) || !preg_match('/^[a-f0-9]{64}$/', $session)) return 'expired';
+    if (!is_string($session) || !preg_match('/^[a-f0-9]{64}$/', $session)) return 'none';
 
     $actualSession = getActualSession($pdo);
-    // echo $actualSession . PHP_EOL;
 
     if ($session === $actualSession) return ''; # up to date, nothing to shout
 
     $stmt = $pdo->prepare("SELECT `date` FROM client_sessions WHERE code = ? LIMIT 1");
     $stmt->execute([$session]);
     $isStale = $stmt->fetchColumn();
-    // var_dump($isStale);
     
     if ($isStale) return $actualSession;
 
-    return 'expired';
+    return 'none';
 }

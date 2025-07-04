@@ -47,19 +47,15 @@ class Data
         if(empty($dates)) return false; // no new dates to add
 
         # insert passed dates to the db
-        // $stmt = self::$pdo->prepare("INSERT INTO main_table ('date') VALUES (:value)");
         $query = "INSERT INTO main_table (`date`, v) VALUES (?, ?)";
         $stmt = self::$pdo->prepare($query);
 
         foreach($dates as $date) {
-            // $stmt->bindParam(':value', $date);
-            // $stmt->execute();
             $stmt->execute([$date, updateVersion(self::$pdo)]);
         }
 
-        # return updated data
-        // return self::getData();
-        return true; // just return true to indicate that the dates were added
+        # just return true to indicate that the dates were added
+        return true; 
     }
 
     private static function getWaitDebit() {
@@ -111,37 +107,19 @@ class Data
     private static function getDataNew(int $sinceVersion = 0): array
     {
         // others_marta - to remove
-        $columns = "date,
-            common_cash as commonCash,
-            common_usd as commonUsd,
-            common_usd_exchanges as commonUsdExchanges,
-            common_usd_rate as dataUsdRate,
-            common_eur_rate as dataEurRate,
-            income_debit as stefkoDepositIncome,
-            income_cancel as commonIncomeCancel,
-            stefko_credit_1 as stefkoCredit1,
-            stefko_credit_2 as stefkoCredit2,
-            stefko_credit_3 as stefkoCredit3,
-            stefko_credit_4 as stefkoCredit4,
-            stefko_debit_1 as stefkoDebit1,
-            stefko_debit_2 as stefkoDebit2,
-            stefko_debit_3 as stefkoDebit3,
-            stefko_debit_4 as stefkoDebit4,
-            stefko_debit_5 as stefkoDebit5,
-            stefko_eur as stefkoEur,
-            stefko_eur_exchanges as stefkoEurExchanges,
-            stefko_income as stefkoIncome,
-            vira_black as viraBlack,
-            vira_black_income as viraBlackIncome,
-            vira_white as viraWhite,
-            vira_white_income as viraWhiteIncome,
-            vira_cash_income as viraCashIncome,
-            vira_cash_expense as viraCashExpense
-        ";
+        
+        // common_usd_rate -> data_usd_rate
+        // common_eur_rate -> data_eur_rate
+        // income_cancel -> common_income_cancel
+        // income_debit -> stefko_deposit_income
+
+        $columnsList = ['date', 'common_cash', 'common_usd', 'common_usd_exchanges', 'data_usd_rate', 'data_eur_rate', 'stefko_deposit_income', 'common_income_cancel', 'stefko_credit_1', 'stefko_credit_2', 'stefko_credit_3', 'stefko_credit_4', 'stefko_debit_1', 'stefko_debit_2', 'stefko_debit_3', 'stefko_debit_4', 'stefko_debit_5', 'stefko_eur', 'stefko_eur_exchanges', 'stefko_income', 'vira_black', 'vira_black_income', 'vira_white', 'vira_white_income', 'vira_cash_income', 'vira_cash_expense']; 
+
+        $columnsQuery = createStringColumnAsName($columnsList);
 
         $condition = $sinceVersion ? "WHERE v > $sinceVersion" : '';
 
-        $query = "SELECT $columns FROM main_table $condition";
+        $query = "SELECT $columnsQuery FROM main_table $condition";
         $data = self::$pdo->query($query)->fetchAll(PDO::FETCH_ASSOC);
 
         return $data;

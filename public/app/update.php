@@ -14,24 +14,23 @@ function updateVersion(PDO $pdo): int
     return $updated;
 }
 
-function updateNew($data) {
-    // print_r($data);
+function updateNew(array $data, PDO $pdo) {
+    ['name' => $name, 'value' => $value, 'session' => $session] = $data;
+
+    if (checkSession($session, $pdo) === 'none') return ['status' => 'success'];
+
     return $data;
+    // return [$verdict];
 }
 
 function update(PDO $pdo, $date): array
 {
-    # get new version
-    $version = updateVersion($pdo);
-
     # receive the data
-    // old: [a, b, c]
-    // new: name, value, version, session
     $json = file_get_contents('php://input');
-    
+
     $newUpdateData = parseJson($json, ['name', 'value', 'session']);
     if ($newUpdateData) {
-        return updateNew($newUpdateData);
+        return updateNew($newUpdateData, $pdo);
     }
 
     try {
@@ -39,8 +38,11 @@ function update(PDO $pdo, $date): array
     } catch (\Throwable $th) {
         return ['status' => 'success'];
     }
-    // echo $passdata;
+
     if(!checkPassdata($passdata, $pdo)) return ['status' => 'success'];
+
+    # get new version
+    $version = updateVersion($pdo);
 
     # set data to db
     $query = "UPDATE main_table SET {$column} = ?, v = ? WHERE `date` = ?";
