@@ -24,6 +24,7 @@ class Data
         $query = "SELECT * FROM secure";
         $hash = self::$pdo->query($query)->fetch(PDO::FETCH_COLUMN);
 
+        // echo $pass;
         return password_verify($pass, $hash);
     }
 
@@ -146,19 +147,31 @@ class Data
         return $data;
     }
 
-    public static function receiveNew($pdo): array
-    {
-        self::$pdo = $pdo;
+    private static function sendData(array $input, string $session) {
+        self::addLastDates();        
 
-        $pass = file_get_contents('php://input');
-        // echo($pass);
+        $actualVersion = getDbVersion(self::$pdo);
+        if($input['version'] !== $actualVersion) {
 
-        if(!self::checkPassword($pass)) {
-            return ['status' => 'success']; # congrats, you did id, don't try anymore!
+            $result = ['version' => $actualVersion];
+
+            if ($session) $result['session'] = $session;
+
+            if ($input['version'] === 0) {
+                $result['data'] = self::getDataNew();
+                $result['futureJson'] = self::getWaitDebit();
+            } else {
+                $result['patches'] = self::getDataNew($input['version']);
+                $future = self::getWaitDebit();
+                if ($future !== $input['futureJson']) $result['futureJson'] = $future;
+            }            
+
+            return $result;
+        } else if($session) {
+            return ['session' => $session];
         }
 
-        self::addLastDates();
-        return self::prepareForSending(self::getDataNew());
+        return ['status' => 'up-to-date'];
     }
 
     public static function refreshNew($pdo): ?array
@@ -166,24 +179,32 @@ class Data
         self::$pdo = $pdo;
 
         $json = file_get_contents('php://input');
-        $input = json_decode($json, true);
+        $input = parseJson($json, ['version', 'futureJson', 'session']);
 
-        if(!checkPassdataNew($input, self::$pdo)) {
+        if (!$input) {
             return ['status' => 'success']; # congrats, you did id, don't try anymore!
         }
 
-        self::addLastDates();
+        return self::sendData($input, checkSession($input['session'], self::$pdo));
+    }
 
-        if($input['version'] !== getDbVersion(self::$pdo)) {
-            // return self::prepareForSending(self::getData());
-            // return ['status' => 'to be updated!'];
-            return [
-                'patches' => self::getDataNew($input['version']),
-                // 'wait_debit' => self::getWaitDebit(),
-                'version' => getDbVersion(self::$pdo)
-            ];
+    public static function login(PDO $pdo): ?array
+    {
+        self::$pdo = $pdo;
+
+        $json = file_get_contents('php://input');
+        $input = parseJson(
+            $json,
+            ['password', 'username', 'passphrase', 'version', 'futureJson', 'session']
+        );
+
+        if (!$input || !checkPassword($input['password'], self::$pdo)) {
+            return ['status' => 'success']; # congrats, you did id, don't try anymore!
         }
 
-        return ['status' => 'up-to-date'];
+        $actualSession = getActualSession(self::$pdo);
+        $session = $actualSession === $input['session'] ? '' : $actualSession;
+
+        return self::sendData($input, $session);
     }
 }

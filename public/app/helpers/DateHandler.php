@@ -30,4 +30,8 @@ class DateHandler
         
         return $result;
     }
+
+    public static function getToday() {
+        return self::dateToText(new DateTime());
+    }
 }

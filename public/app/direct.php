@@ -20,10 +20,14 @@ function direct(PDO $pdo): ?array
     
     if($request['subject'] === 'data') {
         return Data::receive($pdo);
-    } else if($request['subject'] === 'data-new') {
+    } /* else if($request['subject'] === 'data-new') {
         return Data::receiveNew($pdo);
-    } else if($request['subject'] === 'refresh') {
+    } else if($request['subject'] === 'login-update') {
+        return Data::loginUpdate($pdo);
+    } */ else if($request['subject'] === 'refresh') {
         return Data::refresh($pdo);
+    } else if ($request['subject'] === 'login-new') {
+        return Data::login($pdo);
     } else if($request['subject'] === 'refresh-new') {
         return Data::refreshNew($pdo);
     } else if($request['method'] === 'PATCH') {

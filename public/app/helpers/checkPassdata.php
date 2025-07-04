@@ -1,6 +1,14 @@
 <?php
 declare(strict_types=1);
 
+function checkPassword($pass, PDO $pdo): bool
+{
+    $query = "SELECT * FROM secure";
+    $hash = $pdo->query($query)->fetch(PDO::FETCH_COLUMN);
+
+    return password_verify($pass, $hash);
+}
+
 function checkPassdata(mixed $passdata, PDO $pdo): bool|int
 {    
     try {
@@ -27,26 +35,26 @@ function checkPassdata(mixed $passdata, PDO $pdo): bool|int
     return isset($passdata['version']) ? $passdata['version'] : true;
 }
 
-function checkPassdataNew(mixed $passdata, PDO $pdo): bool
-{    
-    try {
-        // $passdata = json_decode($passdata, true);
+// function checkPassdataNew(mixed $passdata, PDO $pdo): bool
+// {    
+//     try {
+//         // $passdata = json_decode($passdata, true);
 
-        $expectedFields = ['version', 'futureJson'];
-        foreach($expectedFields as $field) {
-            if(!isset($passdata[$field])) return false;
-        }
+//         $expectedFields = ['version', 'futureJson'];
+//         foreach($expectedFields as $field) {
+//             if(!isset($passdata[$field])) return false;
+//         }
         
-        // $query = "SELECT {$passdata['column']} FROM main_table WHERE date = ?";
-        // $stmt = $pdo->prepare($query);
-        // $stmt->execute([$passdata['date']]);
+//         // $query = "SELECT {$passdata['column']} FROM main_table WHERE date = ?";
+//         // $stmt = $pdo->prepare($query);
+//         // $stmt->execute([$passdata['date']]);
 
-        // $value = $stmt->fetch(PDO::FETCH_COLUMN);
+//         // $value = $stmt->fetch(PDO::FETCH_COLUMN);
 
-        // if($value != $passdata['value']) return false;
-    } catch (\Throwable $th) {
-        return false;
-    }
+//         // if($value != $passdata['value']) return false;
+//     } catch (\Throwable $th) {
+//         return false;
+//     }
 
-    return true;
-}
+//     return true;
+// }

@@ -14,13 +14,31 @@ function updateVersion(PDO $pdo): int
     return $updated;
 }
 
+function updateNew($data) {
+    // print_r($data);
+    return $data;
+}
+
 function update(PDO $pdo, $date): array
 {
     # get new version
     $version = updateVersion($pdo);
 
     # receive the data
-    [$column, $value, $passdata] = json_decode(file_get_contents('php://input'));
+    // old: [a, b, c]
+    // new: name, value, version, session
+    $json = file_get_contents('php://input');
+    
+    $newUpdateData = parseJson($json, ['name', 'value', 'session']);
+    if ($newUpdateData) {
+        return updateNew($newUpdateData);
+    }
+
+    try {
+        [$column, $value, $passdata] = json_decode($json);
+    } catch (\Throwable $th) {
+        return ['status' => 'success'];
+    }
     // echo $passdata;
     if(!checkPassdata($passdata, $pdo)) return ['status' => 'success'];
 

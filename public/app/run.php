@@ -4,6 +4,9 @@ declare(strict_types=1);
 require_once __DIR__ . '/direct.php';
 require_once __DIR__ . '/helpers/getDbVersion.php';
 require_once __DIR__ . '/helpers/checkPassdata.php';
+require_once __DIR__ . '/helpers/isset.php'; // to be removed!
+require_once __DIR__ . '/helpers/parseJson.php';
+require_once __DIR__ . '/security/sessionHandlers.php';
 
 function run(): void
 {
