@@ -14,13 +14,22 @@ function updateVersion(PDO $pdo): int
     return $updated;
 }
 
-function updateNew(array $data, PDO $pdo) {
+function updateNew(array $data, string $date, PDO $pdo): array {
     ['name' => $name, 'value' => $value, 'session' => $session] = $data;
 
     if (checkSession($session, $pdo) === 'none') return ['status' => 'success'];
 
-    return $data;
-    // return [$verdict];
+    # get new version
+    $version = updateVersion($pdo);
+
+    # set data to db
+    $column = camelToSnake($name);
+    $query = "UPDATE main_table SET {$column} = ?, v = ? WHERE `date` = ?";
+    $stmt = $pdo->prepare($query);
+    $stmt->execute([$value, $version, $date]);
+
+    $rowsAffected = $stmt->rowCount();
+    return $rowsAffected ? ['version' => $version] : ['rowsAffected' => $rowsAffected];
 }
 
 function update(PDO $pdo, $date): array
@@ -28,11 +37,14 @@ function update(PDO $pdo, $date): array
     # receive the data
     $json = file_get_contents('php://input');
 
-    $newUpdateData = parseJson($json, ['name', 'value', 'session']);
+    # check if maybe it's newUpdate case
+    // $newUpdateData = parseJson($json, ['name', 'value', 'session']);
+    $newUpdateData = parseJson($json, ['name', 'session']); # for value === null case
     if ($newUpdateData) {
-        return updateNew($newUpdateData, $pdo);
+        return updateNew($newUpdateData, $date, $pdo);
     }
 
+    # continue with old one, while checking that data is expected
     try {
         [$column, $value, $passdata] = json_decode($json);
     } catch (\Throwable $th) {
@@ -48,17 +60,17 @@ function update(PDO $pdo, $date): array
     $query = "UPDATE main_table SET {$column} = ?, v = ? WHERE `date` = ?";
     $pdo->prepare($query)->execute([$value, $version, $date]);
 
-    # fetch it back
-    // $query = "SELECT {$column} FROM main_table WHERE `date` = '$date'";
-    // $result = $pdo->query($query)->fetch(PDO::FETCH_COLUMN);
-    $query = "SELECT {$column} FROM main_table WHERE `date` = ?";
-    $stmt = $pdo->prepare($query);
-    $stmt->execute([$date]);
-    $result = $stmt->fetch(PDO::FETCH_COLUMN);
+    return ['version' => $version];
 
-    # send the results
-    return (string) $result === (string) $value
-        ? ['version' => $version] : compact('value', 'result');
+    // # fetch it back
+    // $query = "SELECT {$column} FROM main_table WHERE `date` = ?";
+    // $stmt = $pdo->prepare($query);
+    // $stmt->execute([$date]);
+    // $result = $stmt->fetch(PDO::FETCH_COLUMN);
+
+    // # send the results
+    // return (string) $result === (string) $value
+    //     ? ['version' => $version] : compact('value', 'result');
 }
 
 function updateAddTable(PDO $pdo, $column): array
