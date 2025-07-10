@@ -36,26 +36,27 @@ class Data
         return $data;
     }
 
-    private static function addLastDates(): bool
+    private static function addNewRows(): void
     {
-        # check if last date is actual
         $query = 'SELECT date FROM main_table ORDER BY date DESC LIMIT 1';
         $lastDate = self::$pdo->query($query)->fetch(PDO::FETCH_COLUMN);
 
-        $dates = DateHandler::generateDateSpan($lastDate);
+        $today = DateHandler::getToday();
 
-        if(empty($dates)) return false; // no new dates to add
+        if($lastDate === $today) return; 
 
-        # insert passed dates to the db
-        $query = "INSERT INTO main_table (`date`, v) VALUES (?, ?)";
+        $dates = DateHandler::generateDateSpan($lastDate, $today);
+        $version = updateVersion(self::$pdo);
+
+        $query = "INSERT INTO main_table (`date`, v, data_usd_rate, data_eur_rate)
+            VALUES (?, ?, ?, ?)";
         $stmt = self::$pdo->prepare($query);
 
         foreach($dates as $date) {
-            $stmt->execute([$date, updateVersion(self::$pdo)]);
+            $usdRate = $date === $today ? getRate('usd') : null;
+            $eurRate = $date === $today ? getRate('eur') : null;
+            $stmt->execute([$date, $version, $usdRate, $eurRate]);
         }
-
-        # just return true to indicate that the dates were added
-        return true; 
     }
 
     private static function getWaitDebit() {
@@ -81,7 +82,7 @@ class Data
             return ['status' => 'success']; # congrats, you did id, don't try anymore!
         }
 
-        self::addLastDates();
+        self::addNewRows();
         return self::prepareForSending(self::getData());
     }
 
@@ -97,7 +98,9 @@ class Data
             return ['status' => 'success']; # congrats, you did id, don't try anymore!
         }
 
-        if(self::addLastDates() || $receivedVersion !== getDbVersion(self::$pdo)) {
+        self::addNewRows();
+
+        if($receivedVersion !== getDbVersion(self::$pdo)) {
             return self::prepareForSending(self::getData());
         }
 
@@ -125,8 +128,9 @@ class Data
         return $data;
     }
 
+    # new
     private static function sendData(array $input, string $session) {
-        self::addLastDates();        
+        self::addNewRows();        
 
         $actualVersion = getDbVersion(self::$pdo);
         if($input['version'] !== $actualVersion) {

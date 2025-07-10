@@ -18,14 +18,17 @@ class DateHandler
         return self::dateToText($dateTime);
     }
 
-    public static function generateDateSpan(string $lastDate): array
+    /**
+     * @param string $from is exculsive
+     * @param string $to is inculsive
+     */
+    public static function generateDateSpan(string $from, string $to): array
     {
-        $today = self::dateToText(new DateTime());
         $result = [];
 
-        while($lastDate < $today) {
-            $lastDate = self::incrementDate($lastDate);
-            $result[] = $lastDate;
+        while($from < $to) {
+            $from = self::incrementDate($from);
+            $result[] = $from;
         }
         
         return $result;
