@@ -38,6 +38,8 @@ function direct(PDO $pdo): ?array
         return getEurRate();
     } else if($request['subject'] === 'wait-debit') {
         return updateAddTable($pdo, 'wait_debit_future');
+    } else if ($request['subject'] === 'change-future') {
+        return updateFuture($pdo, 'wait_debit_future');
     }
 
     // return ['status' => 'success']; # congrats, you did id, don't try anymore!

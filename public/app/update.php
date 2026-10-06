@@ -93,3 +93,31 @@ function updateAddTable(PDO $pdo, $column): array
     return (string) $result === (string) $value
         ? ['version' => updateVersion($pdo)] : compact('value', 'result');
 }
+
+function updateFuture(PDO $pdo): array
+{
+    # receive the data
+    $json = file_get_contents('php://input');
+    $input = parseJson($json, ['version', 'futureJson', 'session']);
+
+    if (!$input) {
+        return ['status' => 'success']; # congrats, you did id, don't try anymore!
+    }
+
+    $re = checkSession($input['session'], $pdo);
+    if ($re === 'none') return ['status' => 'success'];
+
+    # set data to db
+    $query = "UPDATE add_table SET wait_debit_future = ?
+        WHERE rowid = (SELECT rowid FROM add_table LIMIT 1)";
+
+    $pdo->prepare($query)->execute([$input['futureJson']]);
+
+    # fetch it back
+    $query = "SELECT wait_debit_future FROM add_table";
+    $result = $pdo->query($query)->fetch(PDO::FETCH_COLUMN);
+
+    # send the results
+    return (string) $result === (string) $input['futureJson']
+        ? ['version' => updateVersion($pdo)] : compact('value', 'result');
+}

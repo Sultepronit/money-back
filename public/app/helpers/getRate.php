@@ -5,7 +5,6 @@ function getRate($currency): float {
         $ch = curl_init("https://minfin.com.ua/ua/currency/$currency/");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         $pageContent = curl_exec($ch);
-        curl_close($ch);
 
         libxml_use_internal_errors(true);
         $html = new DOMDocument();
